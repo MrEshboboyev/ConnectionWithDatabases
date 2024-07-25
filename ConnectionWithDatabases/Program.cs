@@ -23,20 +23,23 @@ using (var connection = new NpgsqlConnection(connectionString))
         Console.WriteLine($"PostgreSQL version : {version}");
     }
 
-    // retrieve all data from "Cities"
-    using (var command = new NpgsqlCommand("SELECT city_id, city_name, city_population" +
-        " FROM \"Cities\"", connection))
-    {
-        using  (var reader = command.ExecuteReader())
-        {
-            while(reader.Read())
-            {
-                Console.WriteLine($"City ID : {reader.GetInt32(0)}, " +
-                    $"City Name : {reader.GetString(1)}" +
-                    $"City Population : {reader.GetInt32(2)}");
-            }
-        }
-    }
+    #region CRUD
+
+    //// retrieve all data from "Cities"
+    //using (var command = new NpgsqlCommand("SELECT city_id, city_name, city_population" +
+    //    " FROM \"Cities\"", connection))
+    //{
+    //    using  (var reader = command.ExecuteReader())
+    //    {
+    //        while(reader.Read())
+    //        {
+    //            Console.WriteLine($"City ID : {reader.GetInt32(0)}, " +
+    //                $"City Name : {reader.GetString(1)}" +
+    //                $"City Population : {reader.GetInt32(2)}");
+    //        }
+    //    }
+    //}
+
 
     //// insert data to "Cities"
     //using (var command = new NpgsqlCommand("INSERT INTO \"Cities\" (city_id, city_name)" +
@@ -66,6 +69,80 @@ using (var connection = new NpgsqlConnection(connectionString))
     //    int rowsAffected = command.ExecuteNonQuery();
     //    Console.WriteLine($"Rows affected : {rowsAffected}");
     //}
+
+    #endregion
+
+    //// insert data to "Cities"
+    //using (var command = new NpgsqlCommand("INSERT INTO users (userid, username, email)" +
+    //    " VALUES (@userid, @username, @email)", connection))
+    //{
+    //    command.Parameters.AddWithValue("userid", 2);
+    //    command.Parameters.AddWithValue("username", "denzel");
+    //    command.Parameters.AddWithValue("email", "denzel@example.com");
+    //    int rowsAffected = command.ExecuteNonQuery();
+    //    Console.WriteLine($"Rows affected : {rowsAffected}");
+    //}
+
+    #region SQL Injection Vulnerability
+
+    //// after injection
+    //Console.WriteLine("\n\nAfter injection : ");
+    //PrintDatabaseTable("users", connection);
+
+    //Console.WriteLine("\n\nEnter a username : ");
+    //var username = Console.ReadLine();
+    //var query = $"SELECT * FROM users WHERE username = '{username}'";
+
+    //using (var command = new NpgsqlCommand(query, connection))
+    //{
+    //    using (var reader = command.ExecuteReader())
+    //    {
+    //        while (reader.Read())
+    //        {
+    //            Console.WriteLine($"User ID : {reader.GetInt32(0)}, " +
+    //               $"User Name : {reader.GetString(1)}" +
+    //               $"User Email: {reader.GetString(2)}");
+    //        }
+    //    }
+    //}
+
+
+    //// before injection
+    //Console.WriteLine("\n\nBefore injection : ");
+    //PrintDatabaseTable("users", connection);
+
+    #endregion
+
+    #region Prevent Sql Injection
+
+    // after injection
+    Console.WriteLine("\n\nAfter injection : ");
+    PrintDatabaseTable("users", connection);
+
+    Console.WriteLine("\n\nEnter a username : ");
+    var username = Console.ReadLine();
+    var query = $"SELECT * FROM users WHERE username = @username";
+
+    using (var command = new NpgsqlCommand(query, connection))
+    {
+        command.Parameters.AddWithValue("@username", username);
+        using (var reader = command.ExecuteReader()) 
+        {
+            while (reader.Read())
+            {
+                Console.WriteLine($"User ID : {reader.GetInt32(0)}, " +
+                   $"User Name : {reader.GetString(1)}" +
+                   $"User Email: {reader.GetString(2)}");
+            }
+        }
+    }
+
+
+    // before injection
+    Console.WriteLine("\n\nBefore injection : ");
+    PrintDatabaseTable("users", connection);
+
+    #endregion
 }
 
 
@@ -85,3 +162,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+void PrintDatabaseTable(string tableName, NpgsqlConnection connection)
+{
+    using(var command = new NpgsqlCommand($"SELECT * FROM {tableName}", connection))
+    {
+        using (var reader = command.ExecuteReader())
+        {
+            while(reader.Read())
+            {
+                Console.WriteLine($"User ID : {reader.GetInt32(0)}, " +
+                    $" User Name : {reader.GetString(1)}" +
+                    $" User Email : {reader.GetString(2)}");
+            }
+        }
+    }
+}
