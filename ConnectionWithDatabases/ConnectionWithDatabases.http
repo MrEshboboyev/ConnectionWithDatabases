@@ -1,0 +1,6 @@
+@ConnectionWithDatabases_HostAddress = http://localhost:5178
+
+GET {{ConnectionWithDatabases_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
